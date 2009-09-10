@@ -217,21 +217,21 @@ PHP_METHOD(zbarcodescanner, scan)
 }
 /* }}} */
 
-/* {{{ zBarCodeScanner zBarCodeScanner::setConfig(int name, int value[, int symbol])
+/* {{{ zBarCodeScanner zBarCodeScanner::setConfig(int name, int value[, int symbology])
 	Set config option
 */
 PHP_METHOD(zbarcodescanner, setconfig)
 {
 	php_zbarcode_scanner_object *intern;
-	long symbol = 0, name, value;
-	
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll|l", &name, &value, &symbol) == FAILURE) {
+	long symbology = 0, name, value;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll|l", &name, &value, &symbology) == FAILURE) {
 		return;
 	}
 	intern = (php_zbarcode_scanner_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
 
-	if (zbar_image_scanner_set_config(intern->scanner, symbol, name, value) == 0) {
-		zend_throw_exception(php_zbarcode_exception_class_entry, "Failed to set the configuration option", 1 TSRMLS_CC);
+	if (zbar_image_scanner_set_config(intern->scanner, symbology, name, value) != 0) {
+		zend_throw_exception(php_zbarcode_exception_class_entry, "Config does not apply to specified symbology, or value out of range", 1 TSRMLS_CC);
 		return;
 	}
 	PHP_ZBARCODE_CHAIN_METHOD;
@@ -462,23 +462,24 @@ PHP_MINIT_FUNCTION(zbarcode)
 #endif
 	PHP_BARDECODE_REGISTER_CONST_LONG("CFG_X_DENSITY", ZBAR_CFG_X_DENSITY);		/**< image scanner vertical scan density */
 	PHP_BARDECODE_REGISTER_CONST_LONG("CFG_Y_DENSITY", ZBAR_CFG_Y_DENSITY);		/**< image scanner horizontal scan density */
-               
+    
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ALL", 0);					/**< all symbologies */
 	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_NONE", ZBAR_NONE);			/**< no symbol decoded */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_PARTIAL", ZBAR_PARTIAL);		/**< intermediate status */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_EAN8", ZBAR_EAN8);			/**< EAN-8 */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_UPCE", ZBAR_UPCE);			/**< UPC-E */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ISBN10", ZBAR_ISBN10);		/**< ISBN-10 (from EAN-13).*/
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_UPCA", ZBAR_UPCA);			/**< UPC-A */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_EAN13", ZBAR_EAN13);			/**< EAN-13 */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ISBN13", ZBAR_ISBN13);		/**< ISBN-13 (from EAN-13).  */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_I25", ZBAR_I25);				/**< Interleaved 2 of 5. */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_CODE39", ZBAR_CODE39);		/**< Code 39.  */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_PDF417", ZBAR_PDF417);		/**< PDF417. */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_CODE128", ZBAR_CODE128);		/**< Code 128 */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_SYMBOL", ZBAR_SYMBOL);		/**< mask for base symbol type */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ADDON2", ZBAR_ADDON2);		/**< 2-digit add-on flag */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ADDON5", ZBAR_ADDON5);		/**< 5-digit add-on flag */
-    PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ADDON", ZBAR_ADDON);			/**< add-on flag mask */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_PARTIAL", ZBAR_PARTIAL);		/**< intermediate status */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_EAN8", ZBAR_EAN8);			/**< EAN-8 */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_UPCE", ZBAR_UPCE);			/**< UPC-E */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ISBN10", ZBAR_ISBN10);		/**< ISBN-10 (from EAN-13).*/
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_UPCA", ZBAR_UPCA);			/**< UPC-A */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_EAN13", ZBAR_EAN13);			/**< EAN-13 */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ISBN13", ZBAR_ISBN13);		/**< ISBN-13 (from EAN-13).  */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_I25", ZBAR_I25);				/**< Interleaved 2 of 5. */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_CODE39", ZBAR_CODE39);		/**< Code 39.  */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_PDF417", ZBAR_PDF417);		/**< PDF417. */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_CODE128", ZBAR_CODE128);		/**< Code 128 */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_SYMBOL", ZBAR_SYMBOL);		/**< mask for base symbol type */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ADDON2", ZBAR_ADDON2);		/**< 2-digit add-on flag */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ADDON5", ZBAR_ADDON5);		/**< 5-digit add-on flag */
+	PHP_BARDECODE_REGISTER_CONST_LONG("SYM_ADDON", ZBAR_ADDON);			/**< add-on flag mask */
       
 #undef PHP_BARDECODE_REGISTER_CONST_LONG                                                        
 
