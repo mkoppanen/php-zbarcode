@@ -15,6 +15,8 @@ if test $PHP_ZBARCODE != "no"; then
 	
 	if test -z "$ZBAR_PATH"; then
 		AC_MSG_ERROR(Cannot locate zbar.h header. Please check your libzbar installation)
+	else
+		AC_MSG_RESULT(found in $ZBAR_PATH/include/zbar.h)
 	fi
 	
 	PHP_CHECK_LIBRARY(zbar, zbar_image_scanner_create, [
