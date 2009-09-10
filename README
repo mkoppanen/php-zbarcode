@@ -20,5 +20,17 @@ if (!empty($barcode)) {
 }
 ?>
 
+
 The EAN13 image in the tests/ directory is from 
 http://en.wikipedia.org/wiki/File:Ean-13-5901234123457.png
+
+
+
+
+Dependencies:
+
+ZBar 
+http://zbar.sourceforge.net/
+
+ImageMagick
+http://www.imagemagick.org/
