@@ -162,6 +162,12 @@ PHP_METHOD(zbarcodescanner, scan)
 	
 	intern = (php_zbarcode_scanner_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
 	intern_image = (php_zbarcode_image_object *)zend_object_store_get_object(object TSRMLS_CC);
+	
+	if (!intern_image->image) {
+		zend_throw_exception(php_zbarcode_exception_class_entry, "The image is empty", 1 TSRMLS_CC);
+		return;
+	}
+	
 	array_init(return_value);
 
 	/* scan the image for barcodes */
