@@ -6,9 +6,9 @@ include dirname(__FILE__) . "/skipif.inc.php";
 ?>
 --FILE--
 <?php
-$zBarcodeImage = new zBarcodeImage();
+$ZBarcodeImage = new ZBarcodeImage();
 echo "OK\n";
-$zBarcodeScanner = new zBarcodeScanner();
+$ZBarcodeScanner = new ZBarcodeScanner();
 echo "OK\n";
 ?>
 --EXPECT--

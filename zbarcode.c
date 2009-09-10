@@ -57,6 +57,7 @@ static zbar_image_t *_php_zbarcode_read(MagickWand *wand, char *filename)
 	size_t image_size;
 	
 	if (MagickReadImage(wand, filename) == MagickFalse) {
+		ClearMagickWand(wand);
 		return NULL;
 	}
 	
@@ -83,7 +84,7 @@ static zbar_image_t *_php_zbarcode_read(MagickWand *wand, char *filename)
 	image = zbar_image_create();
     zbar_image_set_format(image, *(int*)"Y800");
     zbar_image_set_size(image, width, height);
-    zbar_image_set_data(image, (void *)image_data, width * height, zbar_image_free_data);
+    zbar_image_set_data(image, (void *)image_data, image_size, zbar_image_free_data);
     
 	ClearMagickWand(wand);
 	return image;
@@ -422,7 +423,7 @@ PHP_MINIT_FUNCTION(zbarcode)
 	php_zbarcode_exception_class_entry->ce_flags |= ZEND_ACC_FINAL;
 
 	/*
-		Initialize the class (zbarcode)
+		Initialize the class (zbarcode). This class is just a container for constants
 	*/
 	INIT_CLASS_ENTRY(ce, "zbarcode", php_zbarcode_class_methods);
 	ce.create_object = php_zbarcode_object_new;
@@ -510,7 +511,7 @@ PHP_MINFO_FUNCTION(zbarcode)
 	php_info_print_table_start();
 	php_info_print_table_row(2, "zbarcode module", "enabled");
 	php_info_print_table_row(2, "zbarcode module version", PHP_ZBARCODE_EXTVER);
-	php_info_print_table_row(2, "zbar library version", zbar_ver);
+	php_info_print_table_row(2, "ZBar library version", zbar_ver);
 	php_info_print_table_row(2, "ImageMagick version", MagickGetVersion(&magick_version));
 	php_info_print_table_end();
 	

@@ -6,12 +6,12 @@ include dirname(__FILE__) . "/skipif.inc.php";
 ?>
 --FILE--
 <?php
-$image = new zBarcodeImage();
+$image = new ZBarcodeImage();
 var_dump($image->read(dirname(__FILE__) . "/ean13.jpg"));
 
 echo "-----------------------------\n";
 
-$scanner = new zBarcodeScanner();
+$scanner = new ZBarcodeScanner();
 var_dump($scanner->scan($image));
 
 $info = $scanner->scan($image, true);
