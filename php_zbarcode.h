@@ -59,7 +59,6 @@ typedef struct _php_zbarcode_scanner_object  {
 */
 typedef struct _php_zbarcode_image_object  {
 	zend_object zo;
-	zbar_image_t *image;
 	MagickWand *magick_wand;
 } php_zbarcode_image_object;
 /* }}} */

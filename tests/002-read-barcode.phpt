@@ -14,10 +14,16 @@ echo "-----------------------------\n";
 $scanner = new ZBarcodeScanner();
 var_dump($scanner->scan($image));
 
-$info = $scanner->scan($image, true);
+$info = $scanner->scan($image, 0, true);
+echo gettype($info[1][0]['location']) . "\n";
 
-if (isset($info[0]['location']))
-	echo "Got location";
+/* Try to scan empty object */
+$image->clear();
+try {
+var_dump($scanner->scan($image));
+} catch (ZBarCodeException $e) {
+	echo "Got exception";
+}
 ?>
 --EXPECT--
 object(zbarcodeimage)#1 (0) {
@@ -32,4 +38,5 @@ array(1) {
     string(6) "EAN-13"
   }
 }
-Got location
+array
+Got exception
