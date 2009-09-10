@@ -4,10 +4,10 @@ Basic usage:
 
 <?php
 /* Create new image object */
-$image = new zBarCodeImage("test.jpg");
+$image = new ZBarCodeImage("test.jpg");
 
 /* Create a barcode scanner */
-$scanner = new zBarCodeScanner();
+$scanner = new ZBarCodeScanner();
 
 /* Scan the image */
 $barcode = $scanner->scan($image);
