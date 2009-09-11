@@ -12,6 +12,7 @@
   <methodsynopsis>
    <methodname>ZBarCodeImage::__construct</methodname>
    <methodparam choice="opt"><type>string</type><parameter>filename</parameter></methodparam>
+   <methodparam choice="opt"><type>boolean</type><parameter>enhance</parameter></methodparam>
   </methodsynopsis>
   <para>
    The constructor for the ZBarCodeImage class.
@@ -27,6 +28,14 @@
      <listitem>
       <para>
        Optional filename. If filename is not empty the image is read
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>enhance</parameter></term>
+     <listitem>
+      <para>
+       Improves quality of a noisy image.
       </para>
      </listitem>
     </varlistentry>

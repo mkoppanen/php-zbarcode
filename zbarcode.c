@@ -49,11 +49,19 @@ zend_class_entry *php_zbarcode_exception_class_entry;
 
 #define PHP_ZBARCODE_CHAIN_METHOD RETURN_ZVAL(getThis(), 1, 0);
 
-static zend_bool _php_zbarcode_read(MagickWand *wand, char *filename)
+static zend_bool _php_zbarcode_read(MagickWand *wand, char *filename, zend_bool enhance)
 {
+	if (enhance) {
+		MagickSetResolution(wand, 200, 200);
+	} 
+	
 	if (MagickReadImage(wand, filename) == MagickFalse) {
 		ClearMagickWand(wand);
 		return 0;
+	}
+	
+	if (enhance) {
+		MagickEnhanceImage(wand);
 	}
 	return 1;
 }
@@ -66,8 +74,9 @@ PHP_METHOD(zbarcodeimage, __construct)
 	php_zbarcode_image_object *intern;
 	char *filename = NULL;
 	int filename_len = 0;
+	zend_bool enhance = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!", &filename, &filename_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!b", &filename, &filename_len, &enhance) == FAILURE) {
 		return;
 	}
 	
@@ -77,14 +86,14 @@ PHP_METHOD(zbarcodeimage, __construct)
 
 	intern = (php_zbarcode_image_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
 
-	if (!_php_zbarcode_read(intern->magick_wand, filename)) {
+	if (!_php_zbarcode_read(intern->magick_wand, filename, enhance)) {
 		PHP_ZBARCODE_THROW_IMAGE_EXCEPTION(intern->magick_wand, "Unable to read the image");
 	}
 	return;
 }
 /* }}} */
 
-/* {{{ zBarcodeImage zBarcodeImage::read(string filename)
+/* {{{ zBarcodeImage zBarcodeImage::read(string filename[, boolean enhance])
 	Read an image
 */
 PHP_METHOD(zbarcodeimage, read)
@@ -92,14 +101,15 @@ PHP_METHOD(zbarcodeimage, read)
 	php_zbarcode_image_object *intern;
 	char *filename;
 	int filename_len;
+	zend_bool enhance = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &filename, &filename_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|b", &filename, &filename_len, &enhance) == FAILURE) {
 		return;
 	}
 
 	intern = (php_zbarcode_image_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
 
-	if (!_php_zbarcode_read(intern->magick_wand, filename)) {
+	if (!_php_zbarcode_read(intern->magick_wand, filename, enhance)) {
 		PHP_ZBARCODE_THROW_IMAGE_EXCEPTION(intern->magick_wand, "Unable to read the image");
 	}
 	PHP_ZBARCODE_CHAIN_METHOD;
@@ -156,14 +166,14 @@ static zbar_image_t *_php_zbarcode_get_page(MagickWand *wand)
 		return NULL;
 	}
 	
-	image_data = MagickGetImageBlob(wand, &image_size);
-	
-	if (!image_data) {
-		return NULL;
-	}
-	
 	width  = MagickGetImageWidth(wand);
 	height = MagickGetImageHeight(wand);
+
+    image_data = malloc(width * height);
+	
+	if (!MagickExportImagePixels(wand, 0, 0, width, height, "I", CharPixel, image_data)) {
+		return NULL;
+	}
 	
 	image = zbar_image_create();
     zbar_image_set_format(image, *(int*)"Y800");
@@ -333,10 +343,12 @@ static function_entry php_zbarcode_class_methods[] =
 
 ZEND_BEGIN_ARG_INFO_EX(zbarcode_image_construct_args, 0, 0, 0)
 	ZEND_ARG_INFO(0, filename)
+	ZEND_ARG_INFO(0, enhance)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(zbarcode_image_read_args, 0, 0, 1)
 	ZEND_ARG_INFO(0, filename)
+	ZEND_ARG_INFO(0, enhance)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(zbarcode_image_no_args, 0, 0, 0)
