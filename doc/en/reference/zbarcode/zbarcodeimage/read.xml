@@ -37,6 +37,7 @@
      <listitem>
       <para>
        Bitmask of <constant>ZBarCode::OPT_*</constant> constants.
+       Usually specifying <constant>ZBarCode::OPT_RESOLUTION</constant> improves results with PDFs.
       </para>
      </listitem>
     </varlistentry>
