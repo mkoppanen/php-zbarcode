@@ -62,7 +62,7 @@ Pages: 2
   &reftitle.seealso;
   <para>
    <simplelist>
-    <member><methodname>ZBarCodeScanner::scan</methodname></member>
+    <member><methodname>ZBarCodeImage::read</methodname></member>
    </simplelist>
   </para>
  </refsect1>
