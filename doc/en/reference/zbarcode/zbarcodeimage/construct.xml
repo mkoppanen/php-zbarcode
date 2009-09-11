@@ -59,9 +59,9 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-$image = ZBarCodeImage("test_ean13.jpg");
+$image = ZBarCodeImage("utility_bill.pdf", ZBarCode::OPT_RESOLUTION | ZBarCode::OPT_ENHANCE);
 
-/* scan the image ... */
+/* Work with $image.. */
 ?>
 ]]>
     </programlisting>
