@@ -29,6 +29,10 @@ zend_class_entry *php_zbarcode_image_sc_entry;
 zend_class_entry *php_zbarcode_scanner_sc_entry;
 zend_class_entry *php_zbarcode_exception_class_entry;
 
+#define PHP_ZBARCODE_RESOLUTION	1
+#define PHP_ZBARCODE_ENHANCE	2
+#define PHP_ZBARCODE_SHARPEN	4
+
 #define PHP_ZBARCODE_THROW_IMAGE_EXCEPTION(magick_wand, alternative_message) \
 { \
 	ExceptionType severity; \
@@ -49,9 +53,9 @@ zend_class_entry *php_zbarcode_exception_class_entry;
 
 #define PHP_ZBARCODE_CHAIN_METHOD RETURN_ZVAL(getThis(), 1, 0);
 
-static zend_bool _php_zbarcode_read(MagickWand *wand, char *filename, zend_bool enhance)
+static zend_bool _php_zbarcode_read(MagickWand *wand, char *filename, long enhance)
 {
-	if (enhance) {
+	if (enhance & PHP_ZBARCODE_RESOLUTION) {
 		MagickSetResolution(wand, 200, 200);
 	} 
 	
@@ -60,13 +64,18 @@ static zend_bool _php_zbarcode_read(MagickWand *wand, char *filename, zend_bool 
 		return 0;
 	}
 	
-	if (enhance) {
+	if (enhance & PHP_ZBARCODE_ENHANCE) {
 		MagickEnhanceImage(wand);
 	}
+	
+	if (enhance & PHP_ZBARCODE_SHARPEN) {
+		MagickSharpenImage(wand, 0, 0.5);
+	}
+	
 	return 1;
 }
 
-/* {{{ zBarcodeImage zBarcodeImage::__construct([string filename])
+/* {{{ zBarcodeImage zBarcodeImage::__construct([string filename, int enhance])
 	Construct a new zBarcodeImage object
 */
 PHP_METHOD(zbarcodeimage, __construct)
@@ -74,9 +83,9 @@ PHP_METHOD(zbarcodeimage, __construct)
 	php_zbarcode_image_object *intern;
 	char *filename = NULL;
 	int filename_len = 0;
-	zend_bool enhance = 0;
+	long enhance = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!b", &filename, &filename_len, &enhance) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!l", &filename, &filename_len, &enhance) == FAILURE) {
 		return;
 	}
 	
@@ -93,7 +102,7 @@ PHP_METHOD(zbarcodeimage, __construct)
 }
 /* }}} */
 
-/* {{{ zBarcodeImage zBarcodeImage::read(string filename[, boolean enhance])
+/* {{{ zBarcodeImage zBarcodeImage::read(string filename[, int enhance])
 	Read an image
 */
 PHP_METHOD(zbarcodeimage, read)
@@ -101,9 +110,9 @@ PHP_METHOD(zbarcodeimage, read)
 	php_zbarcode_image_object *intern;
 	char *filename;
 	int filename_len;
-	zend_bool enhance = 0;
+	long enhance = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|b", &filename, &filename_len, &enhance) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &filename, &filename_len, &enhance) == FAILURE) {
 		return;
 	}
 
@@ -579,6 +588,11 @@ PHP_MINIT_FUNCTION(zbarcode)
 	PHP_ZBARCODE_REGISTER_CONST_LONG("SYM_ADDON2", ZBAR_ADDON2);		/**< 2-digit add-on flag */
 	PHP_ZBARCODE_REGISTER_CONST_LONG("SYM_ADDON5", ZBAR_ADDON5);		/**< 5-digit add-on flag */
 	PHP_ZBARCODE_REGISTER_CONST_LONG("SYM_ADDON", ZBAR_ADDON);			/**< add-on flag mask */
+	
+	PHP_ZBARCODE_REGISTER_CONST_LONG("OPT_RESOLUTION", PHP_ZBARCODE_RESOLUTION);	/**< Set higher resolution */
+	PHP_ZBARCODE_REGISTER_CONST_LONG("OPT_ENHANCE", PHP_ZBARCODE_ENHANCE);			/**< Reduce noise */
+	PHP_ZBARCODE_REGISTER_CONST_LONG("OPT_SHARPEN", PHP_ZBARCODE_SHARPEN);			/**< Sharpen */
+	
       
 #undef PHP_ZBARCODE_REGISTER_CONST_LONG                                                        
 
