@@ -25,6 +25,39 @@
   </para>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title><methodname>ZBarCodeImage::count</methodname> example</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$image = ZBarCodeImage();
+$image->read("page1.jpg");
+
+echo "Pages: " . $image->count() . "\n";
+$image->read("page1.jpg");
+
+echo "Pages: " . $image->count() . "\n";
+
+/* Scan the second page */
+$scanner = new ZBarCodeScanner();
+$barcodes = $scanner->scan($image, 2);
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+Pages: 1
+Pages: 2
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
