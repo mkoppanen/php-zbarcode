@@ -1,8 +1,12 @@
 PHP_ARG_WITH(zbarcode, whether to enable the zbarcode extension,
-[ --with-zbarcode[=DIR]   Enables the zbarcode extension.], no)
+[  --with-zbarcode[=DIR]   Enables the zbarcode extension.], no)
 
 PHP_ARG_WITH(zbarcode-imagemagick-dir, path to ImageMagick library,
-[ --with-zbarcode-imagemagick-dir[=DIR]   path to ImageMagick library.], no)
+[  --with-zbarcode-imagemagick-dir[=DIR]   path to ImageMagick library.], no)
+
+PHP_ARG_ENABLE(zbarcode-imagick, whether to disable ZBarCode Imagick support,
+[  --disable-zbarcode-imagick     whether to disable ZBarCode Imagick support], yes, no)
+
 
 if test $PHP_ZBARCODE != "no"; then
 
@@ -67,6 +71,26 @@ if test $PHP_ZBARCODE != "no"; then
 		PHP_ADD_LIBRARY_WITH_PATH(MagickCore, $WAND_DIR/lib, ZBARCODE_SHARED_LIBADD)
 		PHP_ADD_LIBRARY_WITH_PATH(MagickWand, $WAND_DIR/lib, ZBARCODE_SHARED_LIBADD)
 		PHP_ADD_INCLUDE($WAND_DIR/include/ImageMagick)
+	fi
+	
+	
+	if test $PHP_ZBARCODE_IMAGICK != "no"; then
+		AC_MSG_CHECKING(php_imagick_shared.h header file)
+	
+		if test -z "$PHP_CONFIG"; then
+	      AC_MSG_ERROR([php-config not found])
+	    fi
+	
+		PHP_IMAGICK_HEADER="`$PHP_CONFIG --include-dir`/ext/imagick/php_imagick_shared.h"
+		
+		if test -r $PHP_IMAGICK_HEADER; then
+			AC_MSG_RESULT(found.)
+			AC_DEFINE(HAVE_ZBARCODE_IMAGICK,1,[ ])
+			
+			 PHP_ADD_EXTENSION_DEP(zbarcode, imagick)
+		else
+			AC_MSG_ERROR(not found. Run with --disable-zbarcode-imagick to disable this feature)
+		fi
 	fi
 
 	AC_DEFINE(HAVE_ZBARCODE,1,[ ])

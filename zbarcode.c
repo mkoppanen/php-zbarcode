@@ -29,6 +29,11 @@ zend_class_entry *php_zbarcode_image_sc_entry;
 zend_class_entry *php_zbarcode_scanner_sc_entry;
 zend_class_entry *php_zbarcode_exception_class_entry;
 
+#ifdef HAVE_ZBARCODE_IMAGICK
+/* Imagick support */
+#include "ext/imagick/php_imagick_shared.h"
+#endif
+
 #define PHP_ZBARCODE_RESOLUTION	1
 #define PHP_ZBARCODE_ENHANCE	2
 #define PHP_ZBARCODE_SHARPEN	4
@@ -257,22 +262,52 @@ static zval *_php_zbarcode_scan_page(zbar_image_scanner_t *scanner, zbar_image_t
 */
 PHP_METHOD(zbarcodescanner, scan)
 {
+	zval *image;
+	MagickWand *magick_wand;
+	
 	zbar_image_t *page;
 	php_zbarcode_scanner_object *intern;
-	php_zbarcode_image_object   *intern_image;
+	
 	zval *object;
 	int i = 1;
 	zend_bool extended = 0;
 	long page_num = 1, image_count;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "O|lb", &object, php_zbarcode_image_sc_entry, &page_num, &extended) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|lb", &image, &page_num, &extended) == FAILURE) {
+		return;
+	}
+
+	if (Z_TYPE_P(image) != IS_OBJECT) {
+		zend_throw_exception(php_zbarcode_exception_class_entry, "The first parameter must be a valid object", 1 TSRMLS_CC);
 		return;
 	}
 	
-	intern       = (php_zbarcode_scanner_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
-	intern_image = (php_zbarcode_image_object *)zend_object_store_get_object(object TSRMLS_CC);
+	intern = (php_zbarcode_scanner_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
 	
-	image_count = MagickGetNumberImages(intern_image->magick_wand);
+	if (instanceof_function_ex(Z_OBJCE_P(image), php_zbarcode_image_sc_entry, 0 TSRMLS_CC)) {
+		php_zbarcode_image_object *intern_image;
+		
+		intern_image = (php_zbarcode_image_object *)zend_object_store_get_object(image TSRMLS_CC);
+		magick_wand  = intern_image->magick_wand;
+	} 
+#ifdef HAVE_ZBARCODE_IMAGICK	
+	else if (instanceof_function_ex(Z_OBJCE_P(image), php_imagick_get_class_entry(), 0 TSRMLS_CC)) {
+		php_imagick_object *intern_image;
+		
+		intern_image = (php_imagick_object *)zend_object_store_get_object(image TSRMLS_CC);
+		magick_wand  = intern_image->magick_wand;
+	} 
+#endif	
+	else {
+#ifdef HAVE_ZBARCODE_IMAGICK
+		zend_throw_exception(php_zbarcode_exception_class_entry, "Object must be an instanceof ZBarCodeImage or Imagick", 1 TSRMLS_CC);
+#else
+		zend_throw_exception(php_zbarcode_exception_class_entry, "Object must be an instanceof ZBarCodeImage", 1 TSRMLS_CC);
+#endif	
+		return;	
+	}
+
+	image_count = MagickGetNumberImages(magick_wand);
 	
 	if (image_count == 0) {
 		zend_throw_exception(php_zbarcode_exception_class_entry, "The image object does not contain images", 1 TSRMLS_CC);
@@ -287,12 +322,12 @@ PHP_METHOD(zbarcodescanner, scan)
 			return;
 		}
 
-		if (MagickSetIteratorIndex(intern_image->magick_wand, page_num - 1) == MagickFalse) {
+		if (MagickSetIteratorIndex(magick_wand, page_num - 1) == MagickFalse) {
 			zend_throw_exception(php_zbarcode_exception_class_entry, "Failed to set the page number", 1 TSRMLS_CC);
 			return;
 		} 
 		/* Read page */
-		page = _php_zbarcode_get_page(intern_image->magick_wand);
+		page = _php_zbarcode_get_page(magick_wand);
 		
 		if (!page) {
 			zend_throw_exception(php_zbarcode_exception_class_entry, "Failed to get the page", 1 TSRMLS_CC);
@@ -303,12 +338,12 @@ PHP_METHOD(zbarcodescanner, scan)
 		*return_value = *_php_zbarcode_scan_page(intern->scanner, page, extended TSRMLS_CC);
 		
 	} else {
-		MagickResetIterator(intern_image->magick_wand);
-		while (MagickNextImage(intern_image->magick_wand) != MagickFalse) {
+		MagickResetIterator(magick_wand);
+		while (MagickNextImage(magick_wand) != MagickFalse) {
 			zval *page_array;
 
 			/* Read the current page */
-			page = _php_zbarcode_get_page(intern_image->magick_wand);
+			page = _php_zbarcode_get_page(magick_wand);
 
 			/* Reading current page failed */
 			if (!page) {
@@ -373,7 +408,7 @@ static function_entry php_zbarcode_image_class_methods[] =
 };
 
 ZEND_BEGIN_ARG_INFO_EX(zbarcode_scanner_scan_args, 0, 0, 1)
-	ZEND_ARG_OBJ_INFO(0, zBarCodeImage, zBarCodeImage, 0) 
+	ZEND_ARG_INFO(0, image)
 	ZEND_ARG_INFO(0, page_num)
 	ZEND_ARG_INFO(0, extended)
 ZEND_END_ARG_INFO()
@@ -554,6 +589,13 @@ PHP_MINIT_FUNCTION(zbarcode)
 	ce.create_object = php_zbarcode_scanner_object_new;
 	php_zbarcode_scanner_object_handlers.clone_obj = NULL;
 	php_zbarcode_scanner_sc_entry = zend_register_internal_class(&ce TSRMLS_CC);
+	
+	/* Do we have imagick support */
+#ifdef HAVE_ZBARCODE_IMAGICK
+	zend_declare_class_constant_bool(php_zbarcode_sc_entry, "HAVE_IMAGICK", sizeof("HAVE_IMAGICK")-1, 1 TSRMLS_CC);
+#else 
+	zend_declare_class_constant_bool(php_zbarcode_sc_entry, "HAVE_IMAGICK", sizeof("HAVE_IMAGICK")-1, 0 TSRMLS_CC);
+#endif
 
 #define PHP_ZBARCODE_REGISTER_CONST_LONG(const_name, value) \
 	zend_declare_class_constant_long(php_zbarcode_sc_entry, const_name, sizeof(const_name)-1, (long)value TSRMLS_CC);
@@ -571,7 +613,7 @@ PHP_MINIT_FUNCTION(zbarcode)
 	PHP_ZBARCODE_REGISTER_CONST_LONG("CFG_X_DENSITY", ZBAR_CFG_X_DENSITY);		/**< image scanner vertical scan density */
 	PHP_ZBARCODE_REGISTER_CONST_LONG("CFG_Y_DENSITY", ZBAR_CFG_Y_DENSITY);		/**< image scanner horizontal scan density */
     
-	PHP_ZBARCODE_REGISTER_CONST_LONG("SYM_ALL", 0);					/**< all symbologies */
+	PHP_ZBARCODE_REGISTER_CONST_LONG("SYM_ALL", 0);						/**< all symbologies */
 	PHP_ZBARCODE_REGISTER_CONST_LONG("SYM_NONE", ZBAR_NONE);			/**< no symbol decoded */
 	PHP_ZBARCODE_REGISTER_CONST_LONG("SYM_PARTIAL", ZBAR_PARTIAL);		/**< intermediate status */
 	PHP_ZBARCODE_REGISTER_CONST_LONG("SYM_EAN8", ZBAR_EAN8);			/**< EAN-8 */
@@ -592,8 +634,7 @@ PHP_MINIT_FUNCTION(zbarcode)
 	PHP_ZBARCODE_REGISTER_CONST_LONG("OPT_RESOLUTION", PHP_ZBARCODE_RESOLUTION);	/**< Set higher resolution */
 	PHP_ZBARCODE_REGISTER_CONST_LONG("OPT_ENHANCE", PHP_ZBARCODE_ENHANCE);			/**< Reduce noise */
 	PHP_ZBARCODE_REGISTER_CONST_LONG("OPT_SHARPEN", PHP_ZBARCODE_SHARPEN);			/**< Sharpen */
-	
-      
+
 #undef PHP_ZBARCODE_REGISTER_CONST_LONG                                                        
 
 	return SUCCESS;
@@ -614,17 +655,24 @@ PHP_MSHUTDOWN_FUNCTION(zbarcode)
 PHP_MINFO_FUNCTION(zbarcode)
 {
 	int major = 0, minor = 0;
-	char *zbar_ver;
+	char *zbar_ver = NULL;
 	unsigned long magick_version;
 
 	zbar_version(&major, &minor);
 	spprintf(&zbar_ver, 512, "%d.%d", major, minor);
 
 	php_info_print_table_start();
-	php_info_print_table_row(2, "zbarcode module", "enabled");
-	php_info_print_table_row(2, "zbarcode module version", PHP_ZBARCODE_EXTVER);
-	php_info_print_table_row(2, "ZBar library version", zbar_ver);
-	php_info_print_table_row(2, "ImageMagick version", MagickGetVersion(&magick_version));
+	php_info_print_table_row(2, "zbarcode module",			"enabled");
+	php_info_print_table_row(2, "zbarcode module version",	PHP_ZBARCODE_EXTVER);
+	php_info_print_table_row(2, "ZBar library version",		zbar_ver);
+	php_info_print_table_row(2, "ImageMagick version",		MagickGetVersion(&magick_version));
+
+#ifdef HAVE_ZBARCODE_IMAGICK
+	php_info_print_table_row(2, "Imagick support", "disabled");
+#else 
+	php_info_print_table_row(2, "Imagick support", "enabled");
+#endif
+
 	php_info_print_table_end();
 	
 	efree(zbar_ver);
