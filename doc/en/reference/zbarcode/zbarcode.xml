@@ -34,6 +34,12 @@
     <classsynopsisinfo role="comment">Constants</classsynopsisinfo>
     <fieldsynopsis>
      <modifier>const</modifier>
+     <type>boolean</type>
+     <varname linkend="zbarcode.constants.have-imagick">zbarcode::HAVE_IMAGICK</varname>
+     <initializer>false</initializer>
+    </fieldsynopsis>
+    <fieldsynopsis>
+     <modifier>const</modifier>
      <type>integer</type>
      <varname linkend="zbarcode.constants.cfg-enable">zbarcode::CFG_ENABLE</varname>
      <initializer>0</initializer>
@@ -220,6 +226,13 @@
    <section xml:id="zbarcode.constants.types">
     <title>zbarcode Node Types</title>
     <variablelist>
+
+     <varlistentry xml:id="zbarcode.constants.have-imagick">
+      <term><constant>zbarcode::HAVE_IMAGICK</constant></term>
+      <listitem>
+       <para>&true; if Imagick support is enabled</para>
+      </listitem>
+     </varlistentry>
 
      <varlistentry xml:id="zbarcode.constants.cfg-enable">
       <term><constant>zbarcode::CFG_ENABLE</constant></term>

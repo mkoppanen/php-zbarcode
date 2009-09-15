@@ -11,7 +11,7 @@
   &reftitle.description;
   <methodsynopsis>
    <modifier>public</modifier> <type>array</type><methodname>ZBarCodeScanner::scan</methodname>
-   <methodparam><type>zBarCodeImage</type><parameter>image</parameter></methodparam>
+   <methodparam><type>mixed</type><parameter>image</parameter></methodparam>
    <methodparam choice="opt"><type>integer</type><parameter>page_num</parameter></methodparam>
    <methodparam choice="opt"><type>boolean</type><parameter>extended_info</parameter></methodparam>
   </methodsynopsis>
@@ -30,7 +30,8 @@
      <term><parameter>image</parameter></term>
      <listitem>
       <para>
-       Image object to scan for barcodes
+       Image object to scan for barcodes. This parameter can be ZBarCodeImage object
+       or Imagick object if Imagick support is enabled. Requires Imagick 2.3.0+.
       </para>
      </listitem>
     </varlistentry>
