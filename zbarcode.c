@@ -29,9 +29,19 @@ zend_class_entry *php_zbarcode_image_sc_entry;
 zend_class_entry *php_zbarcode_scanner_sc_entry;
 zend_class_entry *php_zbarcode_exception_class_entry;
 
-#ifdef HAVE_ZBARCODE_IMAGICK
 /* Imagick support */
-#include "ext/imagick/php_imagick_shared.h"
+#ifdef HAVE_ZBARCODE_IMAGICK
+#  include "ext/imagick/php_imagick_shared.h"
+#endif
+
+/* GD support */
+#if HAVE_ZBARCODE_GD
+# include "ext/gd/php_gd.h"
+# if HAVE_GD_BUNDLED
+#  include "ext/gd/libgd/gd.h"
+# else 
+#  include "gd.h"
+# endif
 #endif
 
 #define PHP_ZBARCODE_RESOLUTION	1
@@ -164,12 +174,23 @@ PHP_METHOD(zbarcodeimage, count)
 }
 /* }}} */
 
+static zbar_image_t *_php_zbarcode_image_create(unsigned long width, unsigned long height, unsigned char *image_data)
+{
+	zbar_image_t *image = zbar_image_create();
+	
+	if (!image)
+		return NULL;
+	
+    zbar_image_set_format(image, *(int*)"Y800");
+    zbar_image_set_size(image, width, height);
+    zbar_image_set_data(image, (void *)image_data, width * height, zbar_image_free_data);
+	return image;
+}
+
 static zbar_image_t *_php_zbarcode_get_page(MagickWand *wand) 
 {
 	unsigned long width, height;
 	unsigned char *image_data;
-	zbar_image_t *image;
-	
 	size_t image_size;
 	
 	if (MagickSetImageDepth(wand, 8) == MagickFalse) {
@@ -189,22 +210,14 @@ static zbar_image_t *_php_zbarcode_get_page(MagickWand *wand)
 		return NULL;
 	}
 	
-	image = zbar_image_create();
-    zbar_image_set_format(image, *(int*)"Y800");
-    zbar_image_set_size(image, width, height);
-    zbar_image_set_data(image, (void *)image_data, image_size, zbar_image_free_data);
-    
-	return image;
+	return _php_zbarcode_image_create(width, height, image_data);
 }
 
-static zval *_php_zbarcode_scan_page(zbar_image_scanner_t *scanner, zbar_image_t *image, zend_bool extended TSRMLS_DC)
+static zval *_php_zbarcode_scan_page(zbar_image_scanner_t *scanner, zbar_image_t *image, zend_bool extended, zval *return_array TSRMLS_DC)
 {
 	int n;
 	const zbar_symbol_t *symbol;
-	zval *return_array;
-	
-	/* Return an array */
-	MAKE_STD_ZVAL(return_array);
+
 	array_init(return_array);
 		
 	/* scan the image for barcodes */
@@ -257,7 +270,7 @@ static zval *_php_zbarcode_scan_page(zbar_image_scanner_t *scanner, zbar_image_t
 	return return_array;
 }
 
-/* {{{ array zBarCodeScanner::scan(zBarCodeImage image[, int page_num, bool extended])
+/* {{{ array zBarCodeScanner::scan(mixed image[, int page_num, bool extended])
 	Scan an image
 */
 PHP_METHOD(zbarcodescanner, scan)
@@ -272,72 +285,156 @@ PHP_METHOD(zbarcodescanner, scan)
 	int i = 1;
 	zend_bool extended = 0;
 	long page_num = 1, image_count;
+	zend_bool free_ptr = 0;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|lb", &image, &page_num, &extended) == FAILURE) {
 		return;
 	}
 
+#ifdef HAVE_ZBARCODE_GD
+	if (Z_TYPE_P(image) != IS_OBJECT && Z_TYPE_P(image) != IS_RESOURCE) {
+		zend_throw_exception(php_zbarcode_exception_class_entry, "The first parameter must be a valid object or a GD resource", 1 TSRMLS_CC);
+		return;
+	}
+#else
 	if (Z_TYPE_P(image) != IS_OBJECT) {
 		zend_throw_exception(php_zbarcode_exception_class_entry, "The first parameter must be a valid object", 1 TSRMLS_CC);
 		return;
 	}
-	
+#endif
+
 	intern = (php_zbarcode_scanner_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
-	
-	if (instanceof_function_ex(Z_OBJCE_P(image), php_zbarcode_image_sc_entry, 0 TSRMLS_CC)) {
+
+	if (Z_TYPE_P(image) == IS_OBJECT && instanceof_function_ex(Z_OBJCE_P(image), php_zbarcode_image_sc_entry, 0 TSRMLS_CC)) {
 		php_zbarcode_image_object *intern_image;
-		
+	
 		intern_image = (php_zbarcode_image_object *)zend_object_store_get_object(image TSRMLS_CC);
 		magick_wand  = intern_image->magick_wand;
 	} 
 #ifdef HAVE_ZBARCODE_IMAGICK	
-	else if (instanceof_function_ex(Z_OBJCE_P(image), php_imagick_get_class_entry(), 0 TSRMLS_CC)) {
+	else if (Z_TYPE_P(image) == IS_OBJECT && instanceof_function_ex(Z_OBJCE_P(image), php_imagick_get_class_entry(), 0 TSRMLS_CC)) {
 		php_imagick_object *intern_image;
-		
+	
 		intern_image = (php_imagick_object *)zend_object_store_get_object(image TSRMLS_CC);
 		magick_wand  = intern_image->magick_wand;
 	} 
 #endif	
+#ifdef HAVE_ZBARCODE_GD
+	/* Handle GD resource */
+	else if (Z_TYPE_P(image) == IS_RESOURCE) {
+		gdImagePtr gd_image = NULL;
+		MagickWand *wand;
+		unsigned long image_w, image_h;
+		PixelWand *color;
+		MagickBooleanType status;
+		unsigned char *pixels;
+		int x, y, pixel_pos = 0;
+		zend_bool has_pixels = 0;
+
+		ZEND_FETCH_RESOURCE(gd_image, gdImagePtr, &image, -1, "Image", phpi_get_le_gd());
+		
+		image_w = gdImageSX(gd_image);
+		image_h = gdImageSY(gd_image);
+
+		pixels = emalloc((3 * image_w) * image_h);
+
+		for (y = 0; y < image_h; y++) {
+			for (x = 0; x < image_w; x++) {
+				int pixel = 0;
+				if (gdImageTrueColor(gd_image)) {
+					if (gd_image->tpixels && gdImageBoundsSafe(gd_image, x, y)) {
+						pixel = gdImageTrueColorPixel(gd_image, x, y);
+						pixels[pixel_pos++] = (pixel >> 16) & 0xFF;
+						pixels[pixel_pos++] = (pixel >> 8) & 0xFF;
+						pixels[pixel_pos++] = pixel & 0xFF;
+						has_pixels = 1;
+					}
+				} else {
+					if (gd_image->pixels && gdImageBoundsSafe(gd_image, x, y)) {
+						pixel = gd_image->pixels[y][x];
+						pixels[pixel_pos++] = gd_image->red[pixel];
+						pixels[pixel_pos++] = gd_image->green[pixel];
+					 	pixels[pixel_pos++] = gd_image->blue[pixel];
+						has_pixels = 1;
+					}
+				}
+			}
+		}
+		
+		if (!has_pixels) {
+			efree(pixels);
+			zend_throw_exception(php_zbarcode_exception_class_entry, "Unable to get pixels from GD resource", 1 TSRMLS_CC);
+			return;
+		}
+		
+		wand  = NewMagickWand();
+		color = NewPixelWand();
+		
+		if (MagickNewImage(wand, image_w, image_h, color) == MagickFalse) {
+			efree(pixels);
+			DestroyMagickWand(wand);
+			return;
+		}
+		
+		DestroyPixelWand(color);
+		
+		status = MagickSetImagePixels(wand, 0, 0, image_w, image_h, "RGB", CharPixel, pixels);
+		efree(pixels);
+
+		if (status == MagickFalse) {
+			DestroyMagickWand(wand);
+			return;
+		}
+		
+		magick_wand = wand;
+		page_num = 0;
+		free_ptr = 1;
+	}
+#endif
 	else {
-#ifdef HAVE_ZBARCODE_IMAGICK
-		zend_throw_exception(php_zbarcode_exception_class_entry, "Object must be an instanceof ZBarCodeImage or Imagick", 1 TSRMLS_CC);
-#else
-		zend_throw_exception(php_zbarcode_exception_class_entry, "Object must be an instanceof ZBarCodeImage", 1 TSRMLS_CC);
-#endif	
+		zend_throw_exception(php_zbarcode_exception_class_entry, "Invalid parameter type", 1 TSRMLS_CC);
 		return;	
 	}
 
 	image_count = MagickGetNumberImages(magick_wand);
-	
+
 	if (image_count == 0) {
 		zend_throw_exception(php_zbarcode_exception_class_entry, "The image object does not contain images", 1 TSRMLS_CC);
 		return;
 	}
-	
-	array_init(return_value);
-	
+
 	if (page_num > 0) {
 		if (image_count < page_num) {
+			if (free_ptr) {
+				DestroyMagickWand(magick_wand);
+			}
 			zend_throw_exception_ex(php_zbarcode_exception_class_entry, 1 TSRMLS_CC, "Invalid page specified. The object contains %d page(s)", image_count);
 			return;
 		}
 
 		if (MagickSetIteratorIndex(magick_wand, page_num - 1) == MagickFalse) {
+			if (free_ptr) {
+				DestroyMagickWand(magick_wand);
+			}
 			zend_throw_exception(php_zbarcode_exception_class_entry, "Failed to set the page number", 1 TSRMLS_CC);
 			return;
 		} 
 		/* Read page */
 		page = _php_zbarcode_get_page(magick_wand);
-		
+	
 		if (!page) {
+			if (free_ptr) {
+				DestroyMagickWand(magick_wand);
+			}
 			zend_throw_exception(php_zbarcode_exception_class_entry, "Failed to get the page", 1 TSRMLS_CC);
 			return;
 		}
 
 		/* Scan the page for barcodes */
-		*return_value = *_php_zbarcode_scan_page(intern->scanner, page, extended TSRMLS_CC);
-		
+		_php_zbarcode_scan_page(intern->scanner, page, extended, return_value TSRMLS_CC);
 	} else {
+		array_init(return_value);
+		
 		MagickResetIterator(magick_wand);
 		while (MagickNextImage(magick_wand) != MagickFalse) {
 			zval *page_array;
@@ -351,10 +448,17 @@ PHP_METHOD(zbarcodescanner, scan)
 				continue;
 			}
 			/* Scan the page for barcodes */
-			page_array = _php_zbarcode_scan_page(intern->scanner, page, extended TSRMLS_CC);
+			MAKE_STD_ZVAL(page_array);
+
+			_php_zbarcode_scan_page(intern->scanner, page, extended, page_array TSRMLS_CC);
 			add_index_zval(return_value, i++, page_array);
 		}
 	}
+	
+	if (free_ptr) {
+		DestroyMagickWand(magick_wand);
+	}
+		
 	return;
 }
 /* }}} */
@@ -597,6 +701,13 @@ PHP_MINIT_FUNCTION(zbarcode)
 	zend_declare_class_constant_bool(php_zbarcode_sc_entry, "HAVE_IMAGICK", sizeof("HAVE_IMAGICK")-1, 0 TSRMLS_CC);
 #endif
 
+	/* Do we have GD support */
+#ifdef HAVE_ZBARCODE_GD
+	zend_declare_class_constant_bool(php_zbarcode_sc_entry, "HAVE_GD", sizeof("HAVE_GD")-1, 1 TSRMLS_CC);
+#else 
+	zend_declare_class_constant_bool(php_zbarcode_sc_entry, "HAVE_GD", sizeof("HAVE_GD")-1, 0 TSRMLS_CC);
+#endif
+
 #define PHP_ZBARCODE_REGISTER_CONST_LONG(const_name, value) \
 	zend_declare_class_constant_long(php_zbarcode_sc_entry, const_name, sizeof(const_name)-1, (long)value TSRMLS_CC);
 
@@ -673,8 +784,13 @@ PHP_MINFO_FUNCTION(zbarcode)
 	php_info_print_table_row(2, "Imagick support", "enabled");
 #endif
 
+#ifdef HAVE_ZBARCODE_GD
+	php_info_print_table_row(2, "GD support", "disabled");
+#else 
+	php_info_print_table_row(2, "GD support", "enabled");
+#endif
+
 	php_info_print_table_end();
-	
 	efree(zbar_ver);
 }
 /* }}} */

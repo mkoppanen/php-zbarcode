@@ -4,9 +4,11 @@ PHP_ARG_WITH(zbarcode, whether to enable the zbarcode extension,
 PHP_ARG_WITH(zbarcode-imagemagick-dir, path to ImageMagick library,
 [  --with-zbarcode-imagemagick-dir[=DIR]   path to ImageMagick library.], no)
 
-PHP_ARG_ENABLE(zbarcode-imagick, whether to disable ZBarCode Imagick support,
-[  --disable-zbarcode-imagick     whether to disable ZBarCode Imagick support], yes, no)
+PHP_ARG_ENABLE(zbarcode-imagick, whether to disable zbarcode Imagick support,
+[  --disable-zbarcode-imagick     whether to disable zbarcode Imagick support], yes, no)
 
+PHP_ARG_ENABLE(zbarcode-gd, whether to disable zbarcode GD Imagick support,
+[  --disable-zbarcode-gd     whether to disable zbarcode GD support], yes, no)
 
 if test $PHP_ZBARCODE != "no"; then
 
@@ -92,6 +94,26 @@ if test $PHP_ZBARCODE != "no"; then
 			AC_MSG_ERROR(not found. Run with --disable-zbarcode-imagick to disable this feature)
 		fi
 	fi
+	
+	if test $PHP_ZBARCODE_GD != "no"; then
+
+		AC_MSG_CHECKING(ext/gd/php_gd.h header file)
+		
+		if test -z "$PHP_CONFIG"; then
+	      AC_MSG_ERROR([php-config not found])
+	    fi
+	
+		PHP_GD_CHECK_HEADER="`$PHP_CONFIG --include-dir`/ext/gd/php_gd.h"
+	
+		if test -r $PHP_GD_CHECK_HEADER; then
+			AC_MSG_RESULT(found.)
+		else
+			AC_MSG_ERROR(not found. Run with --disable-zbarcode-gd to disable this feature)
+		fi
+
+		PHP_ADD_EXTENSION_DEP(zbarcode, gd)
+		AC_DEFINE(HAVE_ZBARCODE_GD,1,[ ])
+	fi	
 
 	AC_DEFINE(HAVE_ZBARCODE,1,[ ])
 	PHP_SUBST(ZBARCODE_SHARED_LIBADD)
