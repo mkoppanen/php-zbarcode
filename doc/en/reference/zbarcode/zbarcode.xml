@@ -40,6 +40,12 @@
     </fieldsynopsis>
     <fieldsynopsis>
      <modifier>const</modifier>
+     <type>boolean</type>
+     <varname linkend="zbarcode.constants.have-gd">zbarcode::HAVE_GD</varname>
+     <initializer>false</initializer>
+    </fieldsynopsis>
+    <fieldsynopsis>
+     <modifier>const</modifier>
      <type>integer</type>
      <varname linkend="zbarcode.constants.cfg-enable">zbarcode::CFG_ENABLE</varname>
      <initializer>0</initializer>
@@ -231,6 +237,13 @@
       <term><constant>zbarcode::HAVE_IMAGICK</constant></term>
       <listitem>
        <para>&true; if Imagick support is enabled</para>
+      </listitem>
+     </varlistentry>
+
+     <varlistentry xml:id="zbarcode.constants.have-gd">
+      <term><constant>zbarcode::HAVE_GD</constant></term>
+      <listitem>
+       <para>&true; if GD support is enabled</para>
       </listitem>
      </varlistentry>
 

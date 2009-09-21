@@ -30,8 +30,9 @@
      <term><parameter>image</parameter></term>
      <listitem>
       <para>
-       Image object to scan for barcodes. This parameter can be ZBarCodeImage object
-       or Imagick object if Imagick support is enabled. Requires Imagick 2.3.0+.
+       Image object to scan for barcodes. This parameter can be one of the following: ZBarCodeImage object,
+       Imagick object or GD resource. Imagick and GD support has to be enabled separately during installation.
+       Imagick support requires Imagick 2.3.1 or newer.
       </para>
      </listitem>
     </varlistentry>
