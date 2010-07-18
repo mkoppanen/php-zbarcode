@@ -181,9 +181,9 @@ static zbar_image_t *_php_zbarcode_image_create(unsigned long width, unsigned lo
 	if (!image)
 		return NULL;
 	
-    zbar_image_set_format(image, *(int*)"Y800");
-    zbar_image_set_size(image, width, height);
-    zbar_image_set_data(image, (void *)image_data, width * height, zbar_image_free_data);
+	zbar_image_set_format(image, *(int*)"Y800");
+	zbar_image_set_size(image, width, height);
+	zbar_image_set_data(image, (void *)image_data, width * height, zbar_image_free_data);
 	return image;
 }
 
@@ -204,7 +204,7 @@ static zbar_image_t *_php_zbarcode_get_page(MagickWand *wand)
 	width  = MagickGetImageWidth(wand);
 	height = MagickGetImageHeight(wand);
 
-    image_data = malloc(width * height);
+	image_data = malloc(width * height);
 	
 	if (!MagickExportImagePixels(wand, 0, 0, width, height, "I", CharPixel, image_data)) {
 		return NULL;
