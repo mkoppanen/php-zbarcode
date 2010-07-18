@@ -779,15 +779,15 @@ PHP_MINFO_FUNCTION(zbarcode)
 	php_info_print_table_row(2, "ImageMagick version",		MagickGetVersion(&magick_version));
 
 #ifdef HAVE_ZBARCODE_IMAGICK
-	php_info_print_table_row(2, "Imagick support", "disabled");
-#else 
 	php_info_print_table_row(2, "Imagick support", "enabled");
+#else 
+	php_info_print_table_row(2, "Imagick support", "disabled");
 #endif
 
 #ifdef HAVE_ZBARCODE_GD
-	php_info_print_table_row(2, "GD support", "disabled");
-#else 
 	php_info_print_table_row(2, "GD support", "enabled");
+#else 
+	php_info_print_table_row(2, "GD support", "disabled");
 #endif
 
 	php_info_print_table_end();
