@@ -221,13 +221,13 @@ static zval *_php_zbarcode_scan_page(zbar_image_scanner_t *scanner, zbar_image_t
 	array_init(return_array);
 		
 	/* scan the image for barcodes */
-    n = zbar_scan_image(scanner, image);
+	n = zbar_scan_image(scanner, image);
 
 	/* extract results */
 	symbol = zbar_image_first_symbol(image);
 	
 	/* Loop through all all symbols */
-    for(; symbol; symbol = zbar_symbol_next(symbol)) {
+	for(; symbol; symbol = zbar_symbol_next(symbol)) {
 		zval *symbol_array, *loc_array;
 		zbar_symbol_type_t symbol_type;
 		const char *data;
@@ -239,12 +239,12 @@ static zval *_php_zbarcode_scan_page(zbar_image_scanner_t *scanner, zbar_image_t
 
 		/* Get symbol type and data in it */
 		symbol_type = zbar_symbol_get_type(symbol);
-        data = zbar_symbol_get_data(symbol);
+		data = zbar_symbol_get_data(symbol);
 
 		add_assoc_string(symbol_array, "data", (char *)data, 1);
 		add_assoc_string(symbol_array, "type", (char *)zbar_get_symbol_name(symbol_type), 1);
 #ifdef HAVE_ZBAR_09
-    	add_assoc_long(symbol_array, "quality", zbar_symbol_get_quality(symbol));
+		add_assoc_long(symbol_array, "quality", zbar_symbol_get_quality(symbol));
 #endif		
 		if (extended) {
 			unsigned int i;
