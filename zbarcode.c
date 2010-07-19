@@ -333,6 +333,11 @@ PHP_METHOD(zbarcodescanner, scan)
 
 		ZEND_FETCH_RESOURCE(gd_image, gdImagePtr, &image, -1, "Image", phpi_get_le_gd());
 		
+		if (!gd_image) {
+			zend_throw_exception(php_zbarcode_exception_class_entry, "The given resource is not a valid GD image", 1 TSRMLS_CC);
+			return;
+		}
+		
 		image_w = gdImageSX(gd_image);
 		image_h = gdImageSY(gd_image);
 
