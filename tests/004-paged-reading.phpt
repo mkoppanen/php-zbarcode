@@ -31,61 +31,73 @@ array(4) {
   [1]=>
   array(1) {
     [0]=>
-    array(2) {
+    array(3) {
       ["data"]=>
       string(13) "5901234123457"
       ["type"]=>
       string(6) "EAN-13"
+      ["quality"]=>
+      int(539)
     }
   }
   [2]=>
   array(1) {
     [0]=>
-    array(2) {
+    array(3) {
       ["data"]=>
       string(13) "5901234123457"
       ["type"]=>
       string(6) "EAN-13"
+      ["quality"]=>
+      int(540)
     }
   }
   [3]=>
   array(1) {
     [0]=>
-    array(2) {
+    array(3) {
       ["data"]=>
       string(13) "5901234123457"
       ["type"]=>
       string(6) "EAN-13"
+      ["quality"]=>
+      int(540)
     }
   }
   [4]=>
   array(1) {
     [0]=>
-    array(2) {
+    array(3) {
       ["data"]=>
       string(13) "5901234123457"
       ["type"]=>
       string(6) "EAN-13"
+      ["quality"]=>
+      int(540)
     }
   }
 }
 -----------------------------
 array(1) {
   [0]=>
-  array(2) {
+  array(3) {
     ["data"]=>
     string(13) "5901234123457"
     ["type"]=>
     string(6) "EAN-13"
+    ["quality"]=>
+    int(540)
   }
 }
 -----------------------------
 array(1) {
   [0]=>
-  array(2) {
+  array(3) {
     ["data"]=>
     string(13) "5901234123457"
     ["type"]=>
     string(6) "EAN-13"
+    ["quality"]=>
+    int(540)
   }
 }

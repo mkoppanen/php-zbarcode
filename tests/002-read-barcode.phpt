@@ -25,17 +25,19 @@ var_dump($scanner->scan($image));
 	echo "Got exception";
 }
 ?>
---EXPECT--
-object(zbarcodeimage)#1 (0) {
+--EXPECTF--
+object(zbarcodeimage)#%d (0) {
 }
 -----------------------------
 array(1) {
   [0]=>
-  array(2) {
+  array(3) {
     ["data"]=>
     string(13) "5901234123457"
     ["type"]=>
     string(6) "EAN-13"
+    ["quality"]=>
+    int(539)
   }
 }
 array
