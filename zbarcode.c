@@ -489,7 +489,7 @@ PHP_METHOD(zbarcodescanner, setconfig)
 }
 /* }}} */
 
-static function_entry php_zbarcode_class_methods[] =
+static zend_function_entry php_zbarcode_class_methods[] =
 {
 	{ NULL, NULL, NULL }
 };
@@ -507,7 +507,7 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(zbarcode_image_no_args, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-static function_entry php_zbarcode_image_class_methods[] =
+static zend_function_entry php_zbarcode_image_class_methods[] =
 {
 	PHP_ME(zbarcodeimage, __construct,	zbarcode_image_construct_args, 	ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
 	PHP_ME(zbarcodeimage, read,			zbarcode_image_read_args, 		ZEND_ACC_PUBLIC)
@@ -528,7 +528,7 @@ ZEND_BEGIN_ARG_INFO_EX(zbarcode_scanner_setconfig_args, 0, 0, 2)
 	ZEND_ARG_INFO(0, symbology)
 ZEND_END_ARG_INFO()
 
-static function_entry php_zbarcode_scanner_class_methods[] =
+static zend_function_entry php_zbarcode_scanner_class_methods[] =
 {
 	PHP_ME(zbarcodescanner, scan,		zbarcode_scanner_scan_args, 		ZEND_ACC_PUBLIC)
 	PHP_ME(zbarcodescanner, setconfig,	zbarcode_scanner_setconfig_args, 	ZEND_ACC_PUBLIC)
@@ -588,6 +588,18 @@ static void php_zbarcode_image_object_free_storage(void *object TSRMLS_DC)
 }
 /* }}} */
 
+/* PHP 5.4 */
+#if PHP_VERSION_ID < 50399
+# define object_properties_init(zo, class_type) { \
+			zval *tmp; \
+			zend_hash_copy((*zo).properties, \
+							&class_type->default_properties, \
+							(copy_ctor_func_t) zval_add_ref, \
+							(void *) &tmp, \
+							sizeof(zval *)); \
+		 }
+#endif
+
 /* {{{ static zend_object_value php_zbarcode_object_new(zend_class_entry *class_type TSRMLS_DC)
 */
 static zend_object_value php_zbarcode_object_new(zend_class_entry *class_type TSRMLS_DC)
@@ -601,7 +613,7 @@ static zend_object_value php_zbarcode_object_new(zend_class_entry *class_type TS
 	memset(&intern->zo, 0, sizeof(php_zbarcode_scanner_object));
 	
 	zend_object_std_init(&intern->zo, class_type TSRMLS_CC);
-	zend_hash_copy(intern->zo.properties, &class_type->default_properties, (copy_ctor_func_t) zval_add_ref,(void *) &tmp, sizeof(zval *));
+	object_properties_init(&intern->zo, class_type);
 	
 	retval.handle = zend_objects_store_put(intern, NULL, (zend_objects_free_object_storage_t) php_zbarcode_object_free_storage, NULL TSRMLS_CC);
 	retval.handlers = (zend_object_handlers *) &php_zbarcode_object_handlers;
@@ -625,7 +637,7 @@ static zend_object_value php_zbarcode_scanner_object_new(zend_class_entry *class
 	intern->scanner = zbar_image_scanner_create();
 	
 	zend_object_std_init(&intern->zo, class_type TSRMLS_CC);
-	zend_hash_copy(intern->zo.properties, &class_type->default_properties, (copy_ctor_func_t) zval_add_ref,(void *) &tmp, sizeof(zval *));
+	object_properties_init(&intern->zo, class_type);
 	
 	retval.handle = zend_objects_store_put(intern, NULL, (zend_objects_free_object_storage_t) php_zbarcode_scanner_object_free_storage, NULL TSRMLS_CC);
 	retval.handlers = (zend_object_handlers *) &php_zbarcode_scanner_object_handlers;
@@ -649,7 +661,7 @@ static zend_object_value php_zbarcode_image_object_new(zend_class_entry *class_t
 	intern->magick_wand = NewMagickWand();
 	
 	zend_object_std_init(&intern->zo, class_type TSRMLS_CC);
-	zend_hash_copy(intern->zo.properties, &class_type->default_properties, (copy_ctor_func_t) zval_add_ref,(void *) &tmp, sizeof(zval *));
+	object_properties_init(&intern->zo, class_type);
 	
 	retval.handle = zend_objects_store_put(intern, NULL, (zend_objects_free_object_storage_t) php_zbarcode_image_object_free_storage, NULL TSRMLS_CC);
 	retval.handlers = (zend_object_handlers *) &php_zbarcode_image_object_handlers;
@@ -800,7 +812,7 @@ PHP_MINFO_FUNCTION(zbarcode)
 }
 /* }}} */
 
-static function_entry php_zbarcode_functions[] =
+static zend_function_entry php_zbarcode_functions[] =
 {
 	{ NULL, NULL, NULL }
 };
