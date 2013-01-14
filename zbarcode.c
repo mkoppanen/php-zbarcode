@@ -72,8 +72,8 @@ static zend_bool _php_zbarcode_read(MagickWand *wand, char *filename, long enhan
 {
 	if (enhance & PHP_ZBARCODE_RESOLUTION) {
 		MagickSetResolution(wand, 200, 200);
-	} 
-	
+	}
+
 	if (MagickReadImage(wand, filename) == MagickFalse) {
 		ClearMagickWand(wand);
 		return 0;
@@ -99,6 +99,7 @@ PHP_METHOD(zbarcodeimage, __construct)
 	char *filename = NULL;
 	int filename_len = 0;
 	long enhance = 0;
+	char resolved_path[MAXPATHLEN];
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s!l", &filename, &filename_len, &enhance) == FAILURE) {
 		return;
@@ -107,10 +108,18 @@ PHP_METHOD(zbarcodeimage, __construct)
 	if (!filename) {
 		return;
 	}
+	
+	if (!tsrm_realpath(filename, resolved_path TSRMLS_CC)) {
+		PHP_ZBARCODE_THROW_IMAGE_EXCEPTION(intern->magick_wand, "The file does not exist or cannot be read");
+	}
+	
+	if (php_check_open_basedir(resolved_path TSRMLS_CC)) {
+		return;
+	}
 
 	intern = (php_zbarcode_image_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
 
-	if (!_php_zbarcode_read(intern->magick_wand, filename, enhance)) {
+	if (!_php_zbarcode_read(intern->magick_wand, resolved_path, enhance)) {
 		PHP_ZBARCODE_THROW_IMAGE_EXCEPTION(intern->magick_wand, "Unable to read the image");
 	}
 	return;
@@ -126,14 +135,23 @@ PHP_METHOD(zbarcodeimage, read)
 	char *filename;
 	int filename_len;
 	long enhance = 0;
+	char resolved_path[MAXPATHLEN];
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &filename, &filename_len, &enhance) == FAILURE) {
 		return;
 	}
 
+	if (!tsrm_realpath(filename, resolved_path TSRMLS_CC)) {
+		PHP_ZBARCODE_THROW_IMAGE_EXCEPTION(intern->magick_wand, "The file does not exist or cannot be read");
+	}
+	
+	if (php_check_open_basedir(resolved_path TSRMLS_CC)) {
+		return;
+	}
+
 	intern = (php_zbarcode_image_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
 
-	if (!_php_zbarcode_read(intern->magick_wand, filename, enhance)) {
+	if (!_php_zbarcode_read(intern->magick_wand, resolved_path, enhance)) {
 		PHP_ZBARCODE_THROW_IMAGE_EXCEPTION(intern->magick_wand, "Unable to read the image");
 	}
 	PHP_ZBARCODE_CHAIN_METHOD;
