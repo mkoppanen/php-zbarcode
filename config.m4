@@ -65,17 +65,14 @@ if test $PHP_ZBARCODE != "no"; then
 	ZBARCODE_LIBS=`$WAND_BINARY --libs`
     ZBARCODE_INCS=`$WAND_BINARY --cflags`
 
-    PHP_EVAL_LIBLINE($ZBARCODE_LIBS, ZBARCODE_SHARED_LIBADD)
-    PHP_EVAL_INCLINE($ZBARCODE_INCS)
+    ORIG_LIBS="$LIBS"
+    LIBS="$ZBARCODE_LIBS"
 
-	PHP_CHECK_LIBRARY(MagickWand, MagickExportImagePixels,
-	[],[
-      AC_MSG_ERROR([not found])
-    ],
-    [
-      $ZBARCODE_LIBS
-    ])
+    AC_CHECK_FUNC([MagickExportImagePixels],
+                  [],
+                  [AC_MSG_ERROR([not found])])
 	
+	LIBS="$ORIG_LIBS"
 	
 	if test $PHP_ZBARCODE_IMAGICK != "no"; then
 		AC_MSG_CHECKING(php_imagick_shared.h header file)

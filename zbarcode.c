@@ -805,7 +805,7 @@ PHP_MINFO_FUNCTION(zbarcode)
 	unsigned long magick_version;
 
 	zbar_version(&major, &minor);
-	spprintf(&zbar_ver, 512, "%d.%d", major, minor);
+	spprintf(&zbar_ver, 24, "%d.%d", major, minor);
 
 	php_info_print_table_start();
 	php_info_print_table_row(2, "zbarcode module",			"enabled");
