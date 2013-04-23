@@ -115,5 +115,5 @@ if test $PHP_ZBARCODE != "no"; then
 
 	AC_DEFINE(HAVE_ZBARCODE,1,[ ])
 	PHP_SUBST(ZBARCODE_SHARED_LIBADD)
-	PHP_NEW_EXTENSION(zbarcode, zbarcode.c, $ext_shared)
+	PHP_NEW_EXTENSION(zbarcode, zbarcode.c, $ext_shared,,$ZBARCODE_INCS)
 fi
