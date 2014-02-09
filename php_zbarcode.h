@@ -63,4 +63,7 @@ typedef struct _php_zbarcode_image_object  {
 } php_zbarcode_image_object;
 /* }}} */
 
+extern zend_module_entry zbarcode_module_entry;
+#define phpext_zbarcode_ptr &zbarcode_module_entry
+
 #endif

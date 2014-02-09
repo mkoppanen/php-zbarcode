@@ -77,6 +77,10 @@ if test $PHP_ZBARCODE != "no"; then
 	
 	LIBS="$ORIG_LIBS"
 	
+	if test -n "$prefix"; then
+		PHP_CONFIG="$prefix/bin/php-config"
+	fi
+	
 	if test $PHP_ZBARCODE_IMAGICK != "no"; then
 		AC_MSG_CHECKING(php_imagick_shared.h header file)
 	
@@ -119,4 +123,5 @@ if test $PHP_ZBARCODE != "no"; then
 	AC_DEFINE(HAVE_ZBARCODE,1,[ ])
 	PHP_SUBST(ZBARCODE_SHARED_LIBADD)
 	PHP_NEW_EXTENSION(zbarcode, zbarcode.c, $ext_shared,,$ZBARCODE_INCS)
+	PHP_INSTALL_HEADERS([ext/zbarcode], [php_zbarcode.h])
 fi
