@@ -10,7 +10,7 @@ before_install:
     - sudo apt-get install libzbar0 libzbar-dev libmagickwand5 libmagickwand-dev
 script:
     - export NO_INTERACTION=1
-    - REPORT_EXIT_STATUS=1
+    - export REPORT_EXIT_STATUS=1
     - phpize
     - ./configure
     - make
