@@ -411,8 +411,8 @@ PHP_METHOD(zbarcodescanner, scan)
 
 		color = NewPixelWand();
 		if (!color) {
-			DestroyMagickWand(wand);
 			efree(pixels);
+			DestroyMagickWand(wand);
 			zend_throw_exception(php_zbarcode_exception_class_entry, "Failed to allocate PixelWand structure", 1 TSRMLS_CC);
 			return;
 		}
@@ -420,6 +420,7 @@ PHP_METHOD(zbarcodescanner, scan)
 		if (MagickNewImage(wand, image_w, image_h, color) == MagickFalse) {
 			efree(pixels);
 			DestroyMagickWand(wand);
+			DestroyPixelWand(color);
 			return;
 		}
 		DestroyPixelWand(color);
