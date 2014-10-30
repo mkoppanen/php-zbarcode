@@ -5,14 +5,12 @@ php:
     - 5.4
     - 5.3
 
-env:
-    - NO_INTERACTION=1
-    - REPORT_EXIT_STATUS=1
-
 before_install:
     - sudo apt-get update
     - sudo apt-get install libzbar0 libzbar-dev libmagickwand5 libmagickwand-dev
 script:
+    - export NO_INTERACTION=1
+    - REPORT_EXIT_STATUS=1
     - phpize
     - ./configure
     - make
