@@ -27,32 +27,34 @@ AC_DEFUN([IM_FIND_IMAGEMAGICK],[
 
   AC_MSG_CHECKING(ImageMagick MagickWand API configuration program)
 
+  LMW_ARRAY=$(find /usr/lib/ -name *Wand-config -exec dirname {} \;)
+
   if test "$2" != "yes"; then
-    for i in "$2" /usr/local /usr /opt /opt/local;
+    for i in "$2/bin" /usr/local/bin /usr/bin /opt/bin /opt/local/bin $LMW_ARRAY;
     do
-      if test -r "${i}/bin/MagickWand-config"; then
-        IM_WAND_BINARY="${i}/bin/MagickWand-config"
+      if test -r "${i}/MagickWand-config"; then
+        IM_WAND_BINARY="${i}/MagickWand-config"
         IM_IMAGEMAGICK_PREFIX=$i
         break
       fi
 
-      if test -r "${i}/bin/Wand-config"; then
-        IM_WAND_BINARY="${i}/bin/Wand-config"
+      if test -r "${i}/Wand-config"; then
+        IM_WAND_BINARY="${i}/Wand-config"
         IM_IMAGEMAGICK_PREFIX=$i
         break
       fi
     done
   else
-    for i in /usr/local /usr /opt /opt/local;
+    for i in /usr/local /usr /opt /opt/local $LMW_ARRAY;
     do
-      if test -r "${i}/bin/MagickWand-config"; then
-        IM_WAND_BINARY="${i}/bin/MagickWand-config"
+      if test -r "${i}/MagickWand-config"; then
+        IM_WAND_BINARY="${i}/MagickWand-config"
         IM_IMAGEMAGICK_PREFIX=$i
         break
       fi
 
-      if test -r "${i}/bin/Wand-config"; then
-        IM_WAND_BINARY="${i}/bin/Wand-config"
+      if test -r "${i}/Wand-config"; then
+        IM_WAND_BINARY="${i}/Wand-config"
         IM_IMAGEMAGICK_PREFIX=$i
         break
       fi
@@ -143,4 +145,3 @@ AC_DEFUN([IM_FIND_IMAGEMAGICK],[
   export IM_IMAGEMAGICK_LIBS
   export IM_IMAGEMAGICK_CFLAGS
 ])
-
