@@ -15,7 +15,12 @@ if test $PHP_ZBARCODE != "no"; then
 #
 # ImageMagick macros
 #
-  m4_include([imagemagick.m4])
+
+  if test "$ext_shared" != "yes" && test "$ext_shared" != "shared"; then
+    define('PHP_ZBARCODE_STATIC', 1)
+    PHP_ZBARCODE_STATIC=yes
+  fi
+  m4_include(ifdef('PHP_ZBARCODE_STATIC',PHP_EXT_BUILDDIR(zbarcode)[/],)[imagemagick.m4])
   IM_FIND_IMAGEMAGICK(6002004, $PHP_ZBARCODE_IMAGEMAGICK_DIR)
 
   AC_MSG_CHECKING(zbar installation)
@@ -59,17 +64,17 @@ if test $PHP_ZBARCODE != "no"; then
 #
   if test $PHP_ZBARCODE_IMAGICK != "no"; then
     AC_MSG_CHECKING(php_imagick_shared.h header file)
-
+  
     if test -z "$PHP_CONFIG"; then
         AC_MSG_ERROR([php-config not found])
       fi
-
+  
     PHP_IMAGICK_HEADER="`$PHP_CONFIG --include-dir`/ext/imagick/php_imagick_shared.h"
-
+    
     if test -r $PHP_IMAGICK_HEADER; then
       AC_MSG_RESULT(found.)
       AC_DEFINE(HAVE_ZBARCODE_IMAGICK,1,[ ])
-
+      
        PHP_ADD_EXTENSION_DEP(zbarcode, imagick)
     else
       AC_MSG_ERROR(not found. Run with --disable-zbarcode-imagick to disable this feature)
@@ -82,13 +87,13 @@ if test $PHP_ZBARCODE != "no"; then
   if test $PHP_ZBARCODE_GD != "no"; then
 
     AC_MSG_CHECKING(ext/gd/php_gd.h header file)
-
+    
     if test -z "$PHP_CONFIG"; then
         AC_MSG_ERROR([php-config not found])
       fi
-
+  
     PHP_GD_CHECK_HEADER="`$PHP_CONFIG --include-dir`/ext/gd/php_gd.h"
-
+  
     if test -r $PHP_GD_CHECK_HEADER; then
       AC_MSG_RESULT(found.)
     else
@@ -97,7 +102,7 @@ if test $PHP_ZBARCODE != "no"; then
 
     PHP_ADD_EXTENSION_DEP(zbarcode, gd)
     AC_DEFINE(HAVE_ZBARCODE_GD,1,[ ])
-  fi
+  fi  
 
   PHP_EVAL_LIBLINE($IM_IMAGEMAGICK_LIBS, ZBARCODE_SHARED_LIBADD)
   PHP_EVAL_INCLINE($IM_IMAGEMAGICK_CFLAGS)
