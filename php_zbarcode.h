@@ -19,7 +19,7 @@
 # define _PHP_ZBARCODE_H_
 
 #define PHP_ZBARCODE_EXTNAME "zbarcode"
-#define PHP_ZBARCODE_EXTVER  "0.0.1-dev"
+#define PHP_ZBARCODE_EXTVER  "0.0.2-dev"
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
@@ -53,16 +53,16 @@ typedef struct _php_zbarcode_object  {
 /* {{{ typedef struct _php_zbarcode_scanner_object 
 */
 typedef struct _php_zbarcode_scanner_object  {
-	zend_object zo;
 	zbar_image_scanner_t *scanner;
+	zend_object zo;
 } php_zbarcode_scanner_object;
 /* }}} */
 
 /* {{{ typedef struct _php_zbarcode_image_object 
 */
 typedef struct _php_zbarcode_image_object  {
-	zend_object zo;
 	MagickWand *magick_wand;
+	zend_object zo;
 } php_zbarcode_image_object;
 /* }}} */
 
