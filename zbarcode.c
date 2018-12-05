@@ -132,7 +132,6 @@ PHP_METHOD(zbarcodeimage, __construct)
 	}
 
 	if (!tsrm_realpath(filename->val, resolved_path TSRMLS_CC)) {
-        printf("%s %s\n", filename->val, resolved_path);
 		zend_throw_exception(php_zbarcode_exception_class_entry, "The file does not exist or cannot be read", 1 TSRMLS_CC);
 		return;
 	}
