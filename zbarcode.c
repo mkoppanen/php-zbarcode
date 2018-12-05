@@ -117,7 +117,7 @@ zend_bool s_php_zbarcode_read(MagickWand *wand, char *filename, long enhance)
 PHP_METHOD(zbarcodeimage, __construct)
 {
 	php_zbarcode_image_object *intern;
-	zend_string *filename;
+	zend_string *filename = NULL;
 	long enhance = 0;
 	char resolved_path[MAXPATHLEN];
 
@@ -127,11 +127,12 @@ PHP_METHOD(zbarcodeimage, __construct)
 		Z_PARAM_LONG(enhance)
 	ZEND_PARSE_PARAMETERS_END();
 
-	if (!filename->len) {
+	if (filename == NULL || !filename->len) {
 		return;
 	}
 
 	if (!tsrm_realpath(filename->val, resolved_path TSRMLS_CC)) {
+        printf("%s %s\n", filename->val, resolved_path);
 		zend_throw_exception(php_zbarcode_exception_class_entry, "The file does not exist or cannot be read", 1 TSRMLS_CC);
 		return;
 	}
@@ -156,13 +157,13 @@ PHP_METHOD(zbarcodeimage, __construct)
 PHP_METHOD(zbarcodeimage, read)
 {
 	php_zbarcode_image_object *intern;
-	zend_string *filename;
+	zend_string *filename = NULL;
 	long enhance = 0;
 	char resolved_path[MAXPATHLEN];
 
-	ZEND_PARSE_PARAMETERS_START(0, 2)
-		Z_PARAM_OPTIONAL	
+	ZEND_PARSE_PARAMETERS_START(1, 2)
 		Z_PARAM_STR(filename)
+		Z_PARAM_OPTIONAL	
 		Z_PARAM_LONG(enhance)
 	ZEND_PARSE_PARAMETERS_END();
 
@@ -311,7 +312,6 @@ zval *s_php_zbarcode_scan_page(zbar_image_scanner_t *scanner, zbar_image_t *imag
 			add_assoc_zval(&symbol_array, "location", &loc_array);
 		}
 		add_next_index_zval(return_array, &symbol_array);
-        free((char *)data);
 	}
 	return return_array;
 }
@@ -607,8 +607,9 @@ static void php_zbarcode_object_free_storage(zend_object *object)
 	if (!intern) {
 		return;
 	}
-	zend_object_std_dtor(&intern->zo);
-	efree(intern);
+    if (&intern->zo) {
+        zend_object_std_dtor(&intern->zo);
+    }
 }
 /* }}} */
 
@@ -627,7 +628,6 @@ static void php_zbarcode_scanner_object_free_storage(zend_object *object)
 		intern->scanner = NULL;
 	}
 	zend_object_std_dtor(&intern->zo);
-	efree(intern);
 }
 /* }}} */
 
@@ -647,7 +647,6 @@ static void php_zbarcode_image_object_free_storage(zend_object *object)
 	}
 
 	zend_object_std_dtor(&intern->zo);
-	efree(intern);
 }
 /* }}} */
 
@@ -683,11 +682,11 @@ static zend_object *php_zbarcode_scanner_object_new(zend_class_entry *ce)
 {
 	php_zbarcode_scanner_object *intern = ecalloc(1, sizeof(php_zbarcode_scanner_object) + zend_object_properties_size(ce));
 
-	/* Initialize reader */
-	intern->scanner = zbar_image_scanner_create();
-
 	zend_object_std_init(&intern->zo, ce);
 	object_properties_init(&intern->zo, ce);
+
+	/* Initialize reader */
+	intern->scanner = zbar_image_scanner_create();
 
 	intern->zo.handlers = &php_zbarcode_scanner_object_handlers;
 	return &intern->zo;
@@ -700,11 +699,11 @@ static zend_object *php_zbarcode_image_object_new(zend_class_entry *ce)
 {
 	php_zbarcode_image_object *intern = ecalloc(1, sizeof(php_zbarcode_image_object) + zend_object_properties_size(ce));
 
-	/* Initialize reader */
-	intern->magick_wand = NewMagickWand();
-
 	zend_object_std_init(&intern->zo, ce);
 	object_properties_init(&intern->zo, ce);
+
+	/* Initialize reader */
+	intern->magick_wand = NewMagickWand();
 
 	intern->zo.handlers = &php_zbarcode_image_object_handlers;
 	return &intern->zo;
