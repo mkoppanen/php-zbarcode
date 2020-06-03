@@ -15,7 +15,12 @@ if test $PHP_ZBARCODE != "no"; then
 #
 # ImageMagick macros
 #
-  m4_include([imagemagick.m4])
+
+  if test "$ext_shared" != "yes" && test "$ext_shared" != "shared"; then
+    define('PHP_ZBARCODE_STATIC', 1)
+    PHP_ZBARCODE_STATIC=yes
+  fi
+  m4_include(ifdef('PHP_ZBARCODE_STATIC',PHP_EXT_BUILDDIR(zbarcode)[/],)[imagemagick.m4])
   IM_FIND_IMAGEMAGICK(6002004, $PHP_ZBARCODE_IMAGEMAGICK_DIR)
 
   AC_MSG_CHECKING(zbar installation)
