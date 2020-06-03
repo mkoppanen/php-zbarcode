@@ -11,7 +11,7 @@ php:
 before_install:
     - sudo apt-get update
     - sudo apt-get install libzbar0 libzbar-dev imagemagick libmagickwand-6.q16-dev
-    - ln -s /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickWand-config /usr/bin
+    - sudo ln -s /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickWand-config /usr/bin
 script:
     - export NO_INTERACTION=1
     - export REPORT_EXIT_STATUS=1
