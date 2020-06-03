@@ -15,6 +15,7 @@ $image->read(dirname(__FILE__) . "/ean13.jpg")
 echo "Count: " . $image->count() . "\n";
 $image->clear();
 echo "Count: " . $image->count() . "\n";
+sleep(1);
 
 ?>
 --EXPECT--

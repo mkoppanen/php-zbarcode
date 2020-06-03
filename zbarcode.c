@@ -472,7 +472,7 @@ PHP_METHOD(zbarcodescanner, scan)
 			if (free_ptr) {
 				DestroyMagickWand(magick_wand);
 			}
-			zend_throw_exception_ex(php_zbarcode_exception_class_entry, 1 TSRMLS_CC, "Invalid page specified. The object contains %d page(s)", image_count);
+			zend_throw_exception_ex(php_zbarcode_exception_class_entry, 1 TSRMLS_CC, "Invalid page specified. The object contains %ld page(s)", image_count);
 			return;
 		}
 
@@ -734,6 +734,7 @@ PHP_MINIT_FUNCTION(zbarcode)
 	ce.create_object = php_zbarcode_object_new;
 	php_zbarcode_object_handlers.clone_obj = NULL;
 	php_zbarcode_object_handlers.free_obj = php_zbarcode_object_free_storage;
+	php_zbarcode_object_handlers.offset = XtOffsetOf(php_zbarcode_object, zo);
 	php_zbarcode_sc_entry = zend_register_internal_class(&ce TSRMLS_CC);
 
 	/*
@@ -743,6 +744,7 @@ PHP_MINIT_FUNCTION(zbarcode)
 	ce.create_object = php_zbarcode_image_object_new;
 	php_zbarcode_image_object_handlers.clone_obj = NULL;
 	php_zbarcode_image_object_handlers.free_obj = php_zbarcode_image_object_free_storage;
+	php_zbarcode_image_object_handlers.offset = XtOffsetOf(php_zbarcode_image_object, zo);
 	php_zbarcode_image_sc_entry = zend_register_internal_class(&ce TSRMLS_CC);
 
 	/*
@@ -752,6 +754,7 @@ PHP_MINIT_FUNCTION(zbarcode)
 	ce.create_object = php_zbarcode_scanner_object_new;
 	php_zbarcode_scanner_object_handlers.clone_obj = NULL;
 	php_zbarcode_scanner_object_handlers.free_obj = php_zbarcode_scanner_object_free_storage;
+	php_zbarcode_scanner_object_handlers.offset = XtOffsetOf(php_zbarcode_scanner_object, zo);
 	php_zbarcode_scanner_sc_entry = zend_register_internal_class(&ce TSRMLS_CC);
 
 	/* Do we have imagick support */
