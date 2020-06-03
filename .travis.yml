@@ -5,15 +5,13 @@ php:
     - 7.2
     - 7.1
     - 7.0
-    - 5.6
-    - 5.5
-    - 5.4
-    - 5.3
+
     
 
 before_install:
     - sudo apt-get update
-    - sudo apt-get install libzbar0 libzbar-dev imagemagick
+    - sudo apt-get install libzbar0 libzbar-dev imagemagick libmagickwand-6.q16-dev
+    - sudo ln -s /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickWand-config /usr/bin
 script:
     - export NO_INTERACTION=1
     - export REPORT_EXIT_STATUS=1
