@@ -1,5 +1,9 @@
 Simple extension to read barcodes from images
 
+## Upgrade at 2018-12-05
+
+Support PHP7, And fix some bug that may cause crash.
+
 ## Basic usage:
 
     <?php
