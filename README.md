@@ -1,5 +1,7 @@
 Simple extension to read barcodes from images
 
+[![Build Status](https://travis-ci.org/mkoppanen/php-zbarcode.svg?branch=master)](https://travis-ci.org/mkoppanen/php-zbarcode)
+
 ## Upgrade at 2018-12-05
 
 Support PHP7, And fix some bug that may cause crash.
