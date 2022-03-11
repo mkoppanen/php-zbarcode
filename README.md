@@ -4,7 +4,7 @@ Simple extension to read barcodes from images
 
 ## Upgrade at 2022-03-11
 
-Support libzbar2*, And add code point out.
+Support libzbar1*, And add code point out.
 
 ## Upgrade at 2018-12-05
 
