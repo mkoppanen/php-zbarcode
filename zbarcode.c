@@ -288,6 +288,19 @@ zval *s_php_zbarcode_scan_page(zbar_image_scanner_t *scanner, zbar_image_t *imag
 		symbol_type = zbar_symbol_get_type(symbol);
 		data = zbar_symbol_get_data(symbol);
 
+		int len = zbar_symbol_get_loc_size(symbol);
+
+		zval points_array;
+		array_init(&points_array);
+		int start=0;
+		for (;start<len;start++){
+			zval point_array;
+			array_init(&point_array);
+			add_assoc_long(&point_array, "x", zbar_symbol_get_loc_x(symbol,start));
+			add_assoc_long(&point_array, "y", zbar_symbol_get_loc_y(symbol,start));
+            add_index_zval(&points_array,start,&point_array);
+		}
+        add_assoc_zval(&symbol_array, "point", &points_array);
 		add_assoc_string(&symbol_array, "data", (char *)data);
 		add_assoc_string(&symbol_array, "type", (char *)zbar_get_symbol_name(symbol_type));
 #ifdef HAVE_ZBAR_SYMBOL_GET_QUALITY
