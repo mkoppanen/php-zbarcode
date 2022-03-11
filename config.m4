@@ -35,6 +35,11 @@ if test $PHP_ZBARCODE != "no"; then
 
   if $PKG_CONFIG --exists zbar; then
     PHP_ZBAR_VERSION=`$PKG_CONFIG zbar --modversion`
+	
+	if [[[ "$PHP_ZBAR_VERSION" == 0.1* ]]]; then
+		sed -i 's/, &patch/ /' zbarcode.c
+	fi
+	
     PHP_ZBAR_PREFIX=`$PKG_CONFIG zbar --variable=prefix`
 
     AC_MSG_RESULT([found version $PHP_ZMQ_VERSION, under $PHP_ZBAR_PREFIX])
